@@ -1,0 +1,12 @@
+{
+  "experiments": [
+    {
+      "id": "summer-promo",
+      "transformations": [
+        [1, ".hero__image", 8, "style",
+          "background-image: url(\"//cdn.optimizely.com/img/8177152216/6373ac0c2ebd4ff88c9409f0f552c95d.jpg\");"],
+        [2, ".hero__title", 0, "$.innerHTML=\"Are you ready for spring?\";"]
+      ]
+    }
+  ]
+}

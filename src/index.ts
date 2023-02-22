@@ -14,7 +14,7 @@ export default {
 
     const { pathname, search, searchParams } = new URL(request.url);
     const cookies = parse(request.headers.get('cookie') || '');
-    const experiment = searchParams.get('experiment') || cookies['experiment'];
+    const experiment = searchParams.get('experiment') ?? cookies['experiment'] ?? '';
     const rewrittenControlUrl = new URL(pathname + search, 'https://www.atticandbutton.us');
     const controlRequest = fetch(rewrittenControlUrl, {
       headers: {
@@ -26,7 +26,12 @@ export default {
     });
 
     // If no experipment requested, return control.
-    if (!experiment) return controlRequest;
+    if (!experiment) {
+      const controlResponse = await controlRequest;
+      const mutableResponse = new Response(controlResponse.body, controlResponse);
+      mutableResponse.headers.set('set-cookie', `experiment=${experiment}; Secure; Path=/`);
+      return mutableResponse;
+    }
 
     const abConfigurationRequest = fetch(
       `https://my-json-server.typicode.com/alexnj/atticandbutton-ab-demo/experiments/${experiment}`)
@@ -37,9 +42,9 @@ export default {
     const abConfiguration = await responses[1].json();
     const transformations = abConfiguration?.transformations as ClientAb.Transform[];
 
-    // Make experimentation sticky for future navigations.
     const mutableResponse = new Response(controlResponse.body, controlResponse);
-    mutableResponse.headers.set('set-cookie', `experiment=${experiment}`);
+    mutableResponse.headers.set('set-cookie', `experiment=${experiment}; Secure; Path=/`);
+
     return applyTransformations(mutableResponse, transformations);
   }
 };

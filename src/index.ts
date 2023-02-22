@@ -11,8 +11,8 @@ export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     // Rewrite only read operations.
     if (request.method !== 'GET') return new Response(null, {status: 405});
-
-    const { pathname, search, searchParams } = new URL(request.url);
+    const { host, pathname, search, searchParams } = new URL(request.url);
+    const isLocalDevMode = host.startsWith('localhost'); // Cheap wrangler-cli [l] dev check
     const cookies = parse(request.headers.get('cookie') || '');
     const experiment = searchParams.get('experiment') ?? cookies['experiment'] ?? '';
     const rewrittenControlUrl = new URL(pathname + search, 'https://www.atticandbutton.us');
@@ -39,7 +39,9 @@ export default {
     const federatedCalls = new Array<Promise<Response>>(controlRequest, abConfigurationRequest);
     const responses = await Promise.all(federatedCalls);
     const controlResponse = responses[0];
-    const abConfiguration = await responses[1].json();
+    const abConfiguration = isLocalDevMode ?
+      require('../db.json').experiments.find(({id}) => id === experiment) :
+      await responses[1].json();
     const transformations = abConfiguration?.transformations as ClientAb.Transform[];
 
     const mutableResponse = new Response(controlResponse.body, controlResponse);

@@ -11,7 +11,7 @@ export default class UATransformApplicator  implements HTMLRewriterElementConten
     if (operation === ClientAb.Operations.customJs) {
       return [operation, `$=>{${args[0]}}`];
     }
-    return [operation, ...args];
+    return [operation, ...args.map(arg => JSON.stringify(arg))];
   }
 
   getSerializedTransforms() {

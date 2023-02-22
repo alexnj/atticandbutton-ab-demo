@@ -4,8 +4,8 @@
       "id": "summer-promo",
       "transformations": [
         [1, ".hero__image", 8, "style",
-          "background-image: url(\"//cdn.optimizely.com/img/8177152216/6373ac0c2ebd4ff88c9409f0f552c95d.jpg\");"],
-        [2, ".hero__title", 0, "$.innerHTML=\"Are you ready for spring?\";"]
+          "background-image: url(\"//cdn.shopify.com/s/files/1/0923/0916/t/2/assets/hero_slide_2.jpg%3Fv=114015427772088199321443474842\");"],
+        [2, ".hero__title", 0, "$.innerHTML=\"Ready to go back to the office?\";"]
       ]
     }
   ]

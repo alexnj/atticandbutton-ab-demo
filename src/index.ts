@@ -1,28 +1,10 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `wrangler dev src/index.ts` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `wrangler publish src/index.ts --name my-worker` to publish your worker
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+export interface Env {}
 
-export interface Env {
-	// Example binding to KV. Learn more at https://developers.cloudflare.com/workers/runtime-apis/kv/
-	// MY_KV_NAMESPACE: KVNamespace;
-	//
-	// Example binding to Durable Object. Learn more at https://developers.cloudflare.com/workers/runtime-apis/durable-objects/
-	// MY_DURABLE_OBJECT: DurableObjectNamespace;
-	//
-	// Example binding to R2. Learn more at https://developers.cloudflare.com/workers/runtime-apis/r2/
-	// MY_BUCKET: R2Bucket;
-	//
-	// Example binding to a Service. Learn more at https://developers.cloudflare.com/workers/runtime-apis/service-bindings/
-	// MY_SERVICE: Fetcher;
-}
-
+import { parse } from 'cookie';
 import packageJson from '../package.json';
+import { ClientAb } from './lib/constants';
+import { applyTransformations } from './lib/transformer';
+
 const identificationString = `${packageJson.name}/${packageJson.version}`;
 
 export default {
@@ -30,9 +12,11 @@ export default {
     // Rewrite only read operations.
     if (request.method !== 'GET') return new Response(null, {status: 405});
 
-    const { pathname, search } = new URL(request.url);
-    const rewrittenUrl = new URL(pathname + search, 'https://www.atticandbutton.us');
-    return fetch(rewrittenUrl, {
+    const { pathname, search, searchParams } = new URL(request.url);
+    const cookies = parse(request.headers.get('cookie') || '');
+    const experiment = searchParams.get('experiment') || cookies['experiment'];
+    const rewrittenControlUrl = new URL(pathname + search, 'https://www.atticandbutton.us');
+    const controlRequest = fetch(rewrittenControlUrl, {
       headers: {
         'content-type': 'text/html;charset=utf-8',
         // Modify this request just enough to make rewrites work and
@@ -40,5 +24,22 @@ export default {
         'user-agent': `Mozilla/5.0 (Macintosh; Intel Mac OS X 13_2_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 ${identificationString}`,
       },
     });
+
+    // If no experipment requested, return control.
+    if (!experiment) return controlRequest;
+
+    const abConfigurationRequest = fetch(
+      `https://my-json-server.typicode.com/alexnj/atticandbutton-ab-demo/experiments/${experiment}`)
+
+    const federatedCalls = new Array<Promise<Response>>(controlRequest, abConfigurationRequest);
+    const responses = await Promise.all(federatedCalls);
+    const controlResponse = responses[0];
+    const abConfiguration = await responses[1].json();
+    const transformations = abConfiguration?.transformations as ClientAb.Transform[];
+
+    // Make experimentation sticky for future navigations.
+    const mutableResponse = new Response(controlResponse.body, controlResponse);
+    mutableResponse.headers.set('set-cookie', `experiment=${experiment}`);
+    return applyTransformations(mutableResponse, transformations);
   }
 };

@@ -12,7 +12,6 @@ export default {
     // Rewrite only read operations.
     if (request.method !== 'GET') return new Response(null, {status: 405});
     const { host, pathname, search, searchParams } = new URL(request.url);
-    const isLocalDevMode = host.startsWith('localhost'); // Cheap wrangler-cli [l] dev check
     const cookies = parse(request.headers.get('cookie') || '');
     const experiment = searchParams.get('experiment') ?? cookies['experiment'] ?? '';
     const rewrittenControlUrl = new URL(pathname + search, 'https://www.atticandbutton.us');
@@ -24,7 +23,8 @@ export default {
         'user-agent': `Mozilla/5.0 (Macintosh; Intel Mac OS X 13_2_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36 ${identificationString}`,
       },
     });
-
+    // Cheap wrangler-cli [l] dev check
+    const isLocalDevMode = host.startsWith('localhost') || host.startsWith('127.0.0.1');
     // If no experipment requested, return control.
     if (!experiment) {
       const controlResponse = await controlRequest;

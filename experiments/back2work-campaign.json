@@ -1,6 +1,9 @@
 {
-  "id": "back2work-campaign",
   "transformations": [
+    [1, "head script:nth-of-type(2)", 5, "<!-- replaced https://unpkg.com/@optimizely/optimizely-sdk@3.2.0/dist/optimizely.browser.umd.min.js -->"],
+    [1, "head script:nth-of-type(3)", 5, "<!-- replaced optimizelySdk.createInstance script -->"],
+    [1, "head script:nth-of-type(5)", 5, "<!-- replaced optimizely dynamic fetch script -->"],
+
     [2, ".hero__text-content.hero__image", 8, "style",
       "background-image: url(\"//cdn.shopify.com/s/files/1/0923/0916/t/2/assets/hero_slide_2.jpg%3Fv=114015427772088199321443474842\");"],
     [2, ".hero__title", 0, "$.innerHTML=\"Ready to go back to the office?\""],

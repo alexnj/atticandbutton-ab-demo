@@ -5,6 +5,7 @@ import packageJson from '../package.json';
 import { ClientAb } from './lib/constants';
 import { applyTransformations } from './lib/transformer';
 
+type ABConfigurationAPIResponse = {transformations: ClientAb.Transform[]};
 const identificationString = `${packageJson.name}/${packageJson.version}`;
 
 export default {
@@ -36,8 +37,8 @@ export default {
     const federatedCalls = new Array<Promise<Response>>(controlRequest, abConfigurationRequest);
     const responses = await Promise.all(federatedCalls);
     const controlResponse = responses[0];
-    const abConfiguration = await responses[1].json();
-    const transformations = abConfiguration?.transformations as ClientAb.Transform[];
+    const abConfiguration = await responses[1].json() as ABConfigurationAPIResponse;
+    const transformations = abConfiguration.transformations;
 
     const mutableResponse = new Response(controlResponse.body, controlResponse);
     mutableResponse.headers.set('set-cookie', `experiment=${experiment}; Secure; Path=/`);

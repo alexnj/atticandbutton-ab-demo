@@ -36,9 +36,7 @@ export default {
     const federatedCalls = new Array<Promise<Response>>(controlRequest, abConfigurationRequest);
     const responses = await Promise.all(federatedCalls);
     const controlResponse = responses[0];
-    const abConfiguration = isLocalDevMode ?
-      require('../db.json').experiments.find(({id}) => id === experiment) :
-      await responses[1].json();
+    const abConfiguration = await responses[1].json();
     const transformations = abConfiguration?.transformations as ClientAb.Transform[];
 
     const mutableResponse = new Response(controlResponse.body, controlResponse);

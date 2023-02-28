@@ -32,10 +32,7 @@ export default {
       mutableResponse.headers.set('set-cookie', `experiment=${experiment}; Secure; Path=/`);
       return mutableResponse;
     }
-
-    const abConfigurationRequest = fetch(
-      `https://my-json-server.typicode.com/alexnj/atticandbutton-ab-demo/experiments/${experiment}`)
-
+    const abConfigurationRequest = fetch(`https://raw.githubusercontent.com/${experiment}`);
     const federatedCalls = new Array<Promise<Response>>(controlRequest, abConfigurationRequest);
     const responses = await Promise.all(federatedCalls);
     const controlResponse = responses[0];
